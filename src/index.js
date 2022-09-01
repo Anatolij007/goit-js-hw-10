@@ -1,13 +1,12 @@
-// шмпорт бібліотек
+// імпорт бібліотек
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 // import Notiflix from 'notiflix';
 import debounce from 'lodash.debounce';
-// імпорт бібліотеки та стілів
+// імпорт файлів та стілів
 import { fetchCountries } from './fetchCountries';
 import './css/styles.css';
 
 const DEBOUNCE_DELAY = 300;
-
 const search = document.querySelector('#search-box');
 console.log('~ search', search);
 const list = document.querySelector('.country-list');
