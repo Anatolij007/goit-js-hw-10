@@ -1,94 +1,96 @@
-// import { Notify } from 'notiflix/build/notiflix-notify-aio';
-// // import Notiflix from 'notiflix';
-// import debounce from 'lodash.debounce';
+// шмпорт бібліотек
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+// import Notiflix from 'notiflix';
+import debounce from 'lodash.debounce';
+// імпорт бібліотеки та стілів
+import { fetchCountries } from './fetchCountries';
+import './css/styles.css';
 
-// import { fetchCountries } from './fetchCountries';
-// import './css/styles.css';
+const DEBOUNCE_DELAY = 300;
 
-// const DEBOUNCE_DELAY = 300;
+const search = document.querySelector('#search-box');
+console.log('~ search', search);
+const list = document.querySelector('.country-list');
+const info = document.querySelector('.country-info');
+const accessMessage =
+  'Too many matches found. Please enter a more specific name.';
+const errorMessage = 'Oops, there is no country with that name';
 
-// const search = document.querySelector('#search-box');
-// const list = document.querySelector('.country-list');
-// const info = document.querySelector('.country-info');
-// const accessMessage =
-//   'Too many matches found. Please enter a more specific name.';
-// const errorMessage = 'Oops, there is no country with that name';
+// вішаеєм слухача і за допомогою пакета lodash.debounce запити будуть виконуватися 1 раз в 300мс
+search.addEventListener('input', debounce(inputCountry, DEBOUNCE_DELAY));
 
-// // вішаеєм слухача і за допомогою пакета lodash.debounce запити будуть виконуватися 1 раз в 300мс
-// search.addEventListener('input', debounce(inputCountry, DEBOUNCE_DELAY));
+// функція пошуку країн
+function inputCountry(event) {
+  //вирішує проблеми с пробілами
+  let removeSpaces = event.target.value.trim();
 
-// // функція пошуку країн
-// function inputCountry(event) {
-//   // clearCountries();
+  if (!removeSpaces) {
+    clearCountries();
+    return;
+  }
+  fetchCountries(removeSpaces)
+    .then(countries => {
+      // якщо більше 10 символів, введіще ще
+      if (countries.length > 10) {
+        clearCountries();
+        return Notify.info(accessMessage);
+      }
+      // якщо більше від 2 до 10 символів, покажи розмітку
+      else if (countries.length >= 2 && countries.length <= 10) {
+        clearCountries();
+        return renderCountries(countries);
+      }
+      // якщо 1, покажи повністю країну
+      if (countries.length === 1) {
+        clearCountries();
+        return renderCountry(countries);
+      }
+    })
+    .catch(error => Notify.failure(errorMessage));
+}
 
-//   //вирішує проблеми с пробілами
-//   const removeSpaces = event.targer.value.trim();
+// функція рендерить 2-10 країн
 
-//   if (!removeSpaces) {
-//     clearCountries();
-//     return;
-//   }
-//   fetchCountries(removeSpaces)
-//     .then(countries => {
-//       // якщо більше 10 символів, введіще ще
-//       if (countries.length > 10) {
-//         clearCountries();
-//         return Notify.info(accessMessage);
-//       }
-//       // якщо більше від 2 до 10 символів, покажи розмітку
-//       if (countries.length >= 2 && countries.length <= 10) {
-//         return renderCountries(countries);
-//       }
-//       // якщо 1, покажи повністю країну
-//       if (countries.length === 1) {
-//         return renderCountry(countries);
-//       }
-//     })
-//     .catch(error => Notify.failure(errorMessage));
-// }
+function renderCountries(countries) {
+  const markup = countries
+    .map(({ name, flags }) => {
+      return `<li class="country-list"><img class="country-img"
+      src="${flags.svg}"
+      alt="Flag of${name.official}"
+      width="50">
+      <h1 class="country-name">${name.official}</h1></li>`;
+    })
+    .join('');
 
-// // функція рендерить 2-10 країн
+  info.insertAdjacentHTML('beforeend', markup);
+}
 
-// function renderCountries(countries) {
-//   const markup = countries
-//     .map(({ name, flags }) => {
-//       return `<li><img class="country-img"
-//       src="${flags.svg}"
-//       alt="Flag of${name.official}
-//       width="30"> &nbsp
-//       <h1 class="country-name">${name.official}</h1></li>`;
-//     })
-//     .join('');
+// функція рендерить розмітку країни
+function renderCountry(country) {
+  const markup = country
+    .map(({ name, capital, population, flags, languages }) => {
+      return `<div class="country-div">
+      <li class="country-list"><img class="country-img"
+      src="${flags.svg}"
+      alt="Flag of${name.official}"
+      width="50">
+      <h1 class="country-name">${name.official}</h1></li>
+      <p class="country-capital"><b>Capital: &nbsp </b>${capital}</p>
+      <p class="country-population"><b>Population: &nbsp </b>${population}</p>
+      <p class="country-languages"><b>languages: &nbsp </b>${Object.values(
+        languages
+      )}</p>
+    </div>`;
+    })
+    .join('');
 
-//   info.insertAdjacentHTML('beforeend', markup);
-// }
+  info.insertAdjacentHTML('beforeend', markup);
+}
 
-// // функція рендерить розмітку країни
-// function renderCountry(country) {
-//   const markup = country
-//     .map(({ name, capital, population, flags, languages }) => {
-//       return `<div class="country-div">
-//       <img class="country-img"
-//       src="${flags.svg}"
-//       alt="Flag of${name.official}
-//       width="30"> &nbsp
-//       <h1 class="country-name">${name.official}</h1>
-//       <p class="country-capital"><b>Capital:</b>${capital}</p>
-//       <p class="country-population"><b>Population:</b>${population}</p>
-//       <p class="country-languages"><b>languages:</b>${Object.values(
-//         languages
-//       )}</p>
-//     </div>`;
-//     })
-//     .join('');
-
-//   info.insertAdjacentHTML('beforeend', markup);
-// }
-
-// //очищює поле країн
-// function clearCountries() {
-//   list.innerHTML = '';
-//   info.innerHTML = '';
-// }
+//очищює поле країн
+function clearCountries() {
+  list.innerHTML = '';
+  info.innerHTML = '';
+}
 
 // =============================================
